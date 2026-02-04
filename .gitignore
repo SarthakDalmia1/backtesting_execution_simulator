@@ -1,0 +1,37 @@
+# Build directories
+build/
+cmake-build-*/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Compiled files
+*.o
+*.a
+*.so
+*.dylib
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.eggs/
+dist/
+*.egg
+
+# Data files
+*.csv
+*.parquet
+data/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
