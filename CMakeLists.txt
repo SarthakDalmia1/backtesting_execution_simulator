@@ -21,6 +21,9 @@ add_library(backtesting_engine STATIC
     cpp/core/utils.cpp
     cpp/core/memory_pool.cpp
     cpp/core/timestamp.cpp
+    cpp/orderbook/order.cpp
+    cpp/orderbook/orderbook.cpp
+    cpp/orderbook/matching_engine.cpp
 )
 
 set_target_properties(backtesting_engine PROPERTIES POSITION_INDEPENDENT_CODE ON)
@@ -37,6 +40,8 @@ if(BUILD_TESTS)
     enable_testing()
     add_executable(test_runner
         tests/test_main.cpp
+        tests/test_orderbook.cpp
+        tests/test_matching_engine.cpp
     )
     target_link_libraries(test_runner PRIVATE backtesting_engine)
     add_test(NAME AllTests COMMAND test_runner)
