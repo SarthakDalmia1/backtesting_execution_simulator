@@ -24,6 +24,8 @@ add_library(backtesting_engine STATIC
     cpp/orderbook/order.cpp
     cpp/orderbook/orderbook.cpp
     cpp/orderbook/matching_engine.cpp
+    cpp/events/event.cpp
+    cpp/events/event_queue.cpp
 )
 
 set_target_properties(backtesting_engine PROPERTIES POSITION_INDEPENDENT_CODE ON)
@@ -42,6 +44,7 @@ if(BUILD_TESTS)
         tests/test_main.cpp
         tests/test_orderbook.cpp
         tests/test_matching_engine.cpp
+        tests/test_event_queue.cpp
     )
     target_link_libraries(test_runner PRIVATE backtesting_engine)
     add_test(NAME AllTests COMMAND test_runner)
