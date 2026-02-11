@@ -26,6 +26,8 @@ add_library(backtesting_engine STATIC
     cpp/orderbook/matching_engine.cpp
     cpp/events/event.cpp
     cpp/events/event_queue.cpp
+    cpp/data/market_data_feed.cpp
+    cpp/data/tick_reader.cpp
 )
 
 set_target_properties(backtesting_engine PROPERTIES POSITION_INDEPENDENT_CODE ON)
