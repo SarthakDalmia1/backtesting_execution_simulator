@@ -28,6 +28,11 @@ add_library(backtesting_engine STATIC
     cpp/events/event_queue.cpp
     cpp/data/market_data_feed.cpp
     cpp/data/tick_reader.cpp
+    cpp/position/position_manager.cpp
+    cpp/position/pnl_tracker.cpp
+    cpp/execution/slippage_model.cpp
+    cpp/execution/transaction_costs.cpp
+    cpp/execution/execution_simulator.cpp
 )
 
 set_target_properties(backtesting_engine PROPERTIES POSITION_INDEPENDENT_CODE ON)
@@ -47,6 +52,8 @@ if(BUILD_TESTS)
         tests/test_orderbook.cpp
         tests/test_matching_engine.cpp
         tests/test_event_queue.cpp
+        tests/test_position.cpp
+        tests/test_execution.cpp
     )
     target_link_libraries(test_runner PRIVATE backtesting_engine)
     add_test(NAME AllTests COMMAND test_runner)
