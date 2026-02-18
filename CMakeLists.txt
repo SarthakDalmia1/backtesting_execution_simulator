@@ -33,6 +33,7 @@ add_library(backtesting_engine STATIC
     cpp/execution/slippage_model.cpp
     cpp/execution/transaction_costs.cpp
     cpp/execution/execution_simulator.cpp
+    cpp/strategy/strategy_base.cpp
 )
 
 set_target_properties(backtesting_engine PROPERTIES POSITION_INDEPENDENT_CODE ON)
@@ -54,6 +55,7 @@ if(BUILD_TESTS)
         tests/test_event_queue.cpp
         tests/test_position.cpp
         tests/test_execution.cpp
+        tests/test_strategies.cpp
     )
     target_link_libraries(test_runner PRIVATE backtesting_engine)
     add_test(NAME AllTests COMMAND test_runner)
