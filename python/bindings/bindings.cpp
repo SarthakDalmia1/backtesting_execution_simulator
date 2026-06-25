@@ -18,6 +18,7 @@
 #include "data/market_data_feed.hpp"
 #include "strategy/strategy_base.hpp"
 #include "strategy/strategies.hpp"
+#include "analytics/markout.hpp"
 
 namespace py = pybind11;
 using namespace backtest;
@@ -208,13 +209,13 @@ PYBIND11_MODULE(pybacktest, m) {
     
     py::class_<Fill>(m, "Fill", "Order fill information")
         .def(py::init<>())
-        .def_readonly("order_id", &Fill::order_id)
-        .def_readonly("trade_id", &Fill::trade_id)
-        .def_readonly("timestamp", &Fill::timestamp)
-        .def_readonly("fill_price", &Fill::fill_price)
-        .def_readonly("fill_quantity", &Fill::fill_quantity)
-        .def_readonly("side", &Fill::side)
-        .def_readonly("is_maker", &Fill::is_maker);
+        .def_readwrite("order_id", &Fill::order_id)
+        .def_readwrite("trade_id", &Fill::trade_id)
+        .def_readwrite("timestamp", &Fill::timestamp)
+        .def_readwrite("fill_price", &Fill::fill_price)
+        .def_readwrite("fill_quantity", &Fill::fill_quantity)
+        .def_readwrite("side", &Fill::side)
+        .def_readwrite("is_maker", &Fill::is_maker);
     
     // =========================================================================
     // Configuration
@@ -425,10 +426,46 @@ PYBIND11_MODULE(pybacktest, m) {
              py::arg("position_size") = Quantity::from_int(100));
     
     // =========================================================================
+    // Markout / adverse-selection analyzer
+    // =========================================================================
+
+    py::class_<MarkoutConfig>(m, "MarkoutConfig")
+        .def(py::init<>())
+        .def_readwrite("horizons_ns", &MarkoutConfig::horizons_ns,
+                       "Forward horizons in nanoseconds");
+
+    py::class_<MarkoutStats>(m, "MarkoutStats")
+        .def_readonly("horizon_ns", &MarkoutStats::horizon_ns)
+        .def_readonly("count", &MarkoutStats::count)
+        .def_readonly("mean_bps", &MarkoutStats::mean_bps)
+        .def_readonly("mean_per_share", &MarkoutStats::mean_per_share)
+        .def_readonly("notional_weighted_bps", &MarkoutStats::notional_weighted_bps)
+        .def_readonly("win_rate", &MarkoutStats::win_rate)
+        .def("__repr__", [](const MarkoutStats& s) {
+            return "MarkoutStats(horizon_ns=" + std::to_string(s.horizon_ns) +
+                   ", count=" + std::to_string(s.count) +
+                   ", mean_bps=" + std::to_string(s.mean_bps) +
+                   ", win_rate=" + std::to_string(s.win_rate) + ")";
+        });
+
+    py::class_<MarkoutAnalyzer>(m, "MarkoutAnalyzer",
+        "Streaming markout / adverse-selection analyzer")
+        .def(py::init<MarkoutConfig>(), py::arg("config") = MarkoutConfig())
+        .def("record_fill", &MarkoutAnalyzer::record_fill,
+             py::arg("fill"), py::arg("mid_at_fill"),
+             "Register a fill with the mid prevailing at execution")
+        .def("on_mid", &MarkoutAnalyzer::on_mid,
+             py::arg("timestamp"), py::arg("mid"),
+             "Feed the current mid; resolves any elapsed horizons")
+        .def("stats", &MarkoutAnalyzer::stats, "Per-horizon markout statistics")
+        .def("effective_spread_bps", &MarkoutAnalyzer::effective_spread_bps)
+        .def("unresolved_fills", &MarkoutAnalyzer::unresolved_fills)
+        .def("total_fills", &MarkoutAnalyzer::total_fills)
+        .def("reset", &MarkoutAnalyzer::reset);
+
+    // =========================================================================
     // Utility Functions
     // =========================================================================
-    
-    m.def("now_ns", &now_ns, "Get current timestamp in nanoseconds");
     m.def("to_timestamp", &to_timestamp, 
           "Create timestamp from date/time components",
           py::arg("year"), py::arg("month"), py::arg("day"),

@@ -38,6 +38,7 @@ add_library(backtesting_engine STATIC
     cpp/execution/transaction_costs.cpp
     cpp/position/position_manager.cpp
     cpp/position/pnl_tracker.cpp
+    cpp/analytics/markout.cpp
     cpp/strategy/strategy_base.cpp
     cpp/data/market_data_feed.cpp
     cpp/data/tick_reader.cpp
@@ -85,6 +86,7 @@ if(BUILD_TESTS)
         tests/test_execution.cpp
         tests/test_position.cpp
         tests/test_strategies.cpp
+        tests/test_markout.cpp
     )
     target_link_libraries(test_runner PRIVATE backtesting_engine)
     add_test(NAME AllTests COMMAND test_runner)
