@@ -43,32 +43,36 @@ A high-performance, tick-level backtesting engine for quantitative trading strat
 
 ```
 backtesting_execution_simulator/
-├── cpp/
+├── cpp/                            # each module is a .hpp/.cpp pair:
+│   │                               # declarations + trivial accessors in the
+│   │                               # header, implementations in the source
 │   ├── core/
-│   │   ├── types.hpp           # Fixed-point prices, timestamps, symbols
-│   │   ├── utils.hpp           # Mathematical utilities
-│   │   ├── memory_pool.hpp     # Zero-allocation memory management
-│   │   └── timestamp.hpp       # Nanosecond time handling
+│   │   ├── types.hpp/.cpp          # Fixed-point prices, timestamps, symbols
+│   │   ├── utils.hpp/.cpp          # Mathematical utilities
+│   │   ├── memory_pool.hpp         # Zero-allocation memory management (templates)
+│   │   └── timestamp.hpp/.cpp      # Nanosecond time handling
 │   ├── orderbook/
-│   │   ├── order.hpp           # Order structure
-│   │   ├── orderbook.hpp       # Limit order book implementation
-│   │   └── matching_engine.hpp # Price-time priority matching
+│   │   ├── order.hpp/.cpp          # Order structure
+│   │   ├── orderbook.hpp/.cpp      # Limit order book implementation
+│   │   └── matching_engine.hpp/.cpp # Price-time priority matching
 │   ├── events/
-│   │   ├── event.hpp           # Event types (MarketData, Fill, etc.)
-│   │   └── event_queue.hpp     # Priority queue + lock-free SPSC
+│   │   ├── event.hpp/.cpp          # Event types (MarketData, Fill, etc.)
+│   │   └── event_queue.hpp/.cpp    # Priority queue + lock-free SPSC
 │   ├── execution/
-│   │   ├── slippage_model.hpp      # Market impact models
-│   │   ├── transaction_costs.hpp   # Fee structures
-│   │   └── execution_simulator.hpp # Main simulation engine
+│   │   ├── slippage_model.hpp/.cpp      # Market impact models
+│   │   ├── transaction_costs.hpp/.cpp   # Fee structures
+│   │   └── execution_simulator.hpp/.cpp # Main simulation engine
 │   ├── position/
-│   │   ├── position_manager.hpp    # Position tracking
-│   │   └── pnl_tracker.hpp         # Performance analytics
+│   │   ├── position_manager.hpp/.cpp    # Position tracking
+│   │   └── pnl_tracker.hpp/.cpp         # Performance analytics
+│   ├── analytics/
+│   │   └── markout.hpp/.cpp        # Markout / adverse-selection analyzer
 │   ├── data/
-│   │   ├── market_data_feed.hpp    # Data feed interfaces
-│   │   └── tick_reader.hpp         # CSV/binary tick readers
+│   │   ├── market_data_feed.hpp/.cpp    # Data feed interfaces
+│   │   └── tick_reader.hpp/.cpp         # CSV/binary tick readers
 │   ├── strategy/
-│   │   ├── strategy_base.hpp       # Base strategy class
-│   │   └── strategies.hpp          # Built-in strategies
+│   │   ├── strategy_base.hpp/.cpp       # Base strategy class
+│   │   └── strategies.hpp/.cpp          # Built-in strategies
 │   └── benchmarks/
 │       └── benchmark_main.cpp
 ├── python/
@@ -80,7 +84,8 @@ backtesting_execution_simulator/
 │   ├── test_event_queue.cpp
 │   ├── test_execution.cpp
 │   ├── test_position.cpp
-│   └── test_strategies.cpp
+│   ├── test_strategies.cpp
+│   └── test_markout.cpp
 └── examples/
     └── demo.py
 ```

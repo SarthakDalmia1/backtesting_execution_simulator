@@ -2,6 +2,8 @@
 
 #include "core/types.hpp"
 #include <algorithm>
+#include <memory>
+#include <vector>
 
 namespace backtest {
 
@@ -27,13 +29,11 @@ public:
 class ZeroCostModel : public TransactionCostModel {
 public:
     double calculate_cost(
-        double /* notional */,
-        Quantity /* quantity */,
-        bool /* is_maker */,
-        const Symbol& /* symbol */
-    ) const override {
-        return 0.0;
-    }
+        double notional,
+        Quantity quantity,
+        bool is_maker,
+        const Symbol& symbol
+    ) const override;
 };
 
 // ============================================================================
@@ -51,14 +51,10 @@ public:
     
     double calculate_cost(
         double notional,
-        Quantity /* quantity */,
+        Quantity quantity,
         bool is_maker,
-        const Symbol& /* symbol */
-    ) const override {
-        double fee_bps = is_maker ? maker_fee_bps_ : taker_fee_bps_;
-        double cost = notional * fee_bps / 10000.0;
-        return std::max(cost, min_cost_);
-    }
+        const Symbol& symbol
+    ) const override;
 
 private:
     double maker_fee_bps_;
@@ -77,38 +73,14 @@ public:
         double taker_fee_bps;
     };
     
-    TieredCostModel(std::vector<Tier> tiers, double min_cost = 0.0)
-        : tiers_(std::move(tiers)), min_cost_(min_cost), cumulative_volume_(0.0) {
-        // Sort tiers by volume threshold
-        std::sort(tiers_.begin(), tiers_.end(),
-                  [](const Tier& a, const Tier& b) {
-                      return a.volume_threshold < b.volume_threshold;
-                  });
-    }
-    
+    TieredCostModel(std::vector<Tier> tiers, double min_cost = 0.0);
+
     double calculate_cost(
         double notional,
-        Quantity /* quantity */,
+        Quantity quantity,
         bool is_maker,
-        const Symbol& /* symbol */
-    ) const override {
-        // Find applicable tier
-        const Tier* applicable_tier = &tiers_.back();
-        for (const auto& tier : tiers_) {
-            if (cumulative_volume_ < tier.volume_threshold) {
-                applicable_tier = &tier;
-                break;
-            }
-        }
-        
-        // Update cumulative volume (mutable in real implementation)
-        // cumulative_volume_ += notional;
-        
-        double fee_bps = is_maker ? applicable_tier->maker_fee_bps 
-                                  : applicable_tier->taker_fee_bps;
-        double cost = notional * fee_bps / 10000.0;
-        return std::max(cost, min_cost_);
-    }
+        const Symbol& symbol
+    ) const override;
     
     void reset_volume() { cumulative_volume_ = 0.0; }
     void add_volume(double vol) { cumulative_volume_ += vol; }
@@ -137,18 +109,9 @@ public:
     double calculate_cost(
         double notional,
         Quantity quantity,
-        bool /* is_maker */,
-        const Symbol& /* symbol */
-    ) const override {
-        double shares = quantity.to_double();
-        
-        double cost = 0.0;
-        cost += exchange_fee_ * shares;
-        cost += clearing_fee_ * shares;
-        cost += notional * broker_fee_bps_ / 10000.0;
-        
-        return std::max(cost, min_cost_);
-    }
+        bool is_maker,
+        const Symbol& symbol
+    ) const override;
 
 private:
     double exchange_fee_;
@@ -171,13 +134,7 @@ public:
         Quantity quantity,
         bool is_maker,
         const Symbol& symbol
-    ) const override {
-        double total_cost = 0.0;
-        for (const auto& model : models_) {
-            total_cost += model->calculate_cost(notional, quantity, is_maker, symbol);
-        }
-        return total_cost;
-    }
+    ) const override;
 
 private:
     std::vector<std::unique_ptr<TransactionCostModel>> models_;

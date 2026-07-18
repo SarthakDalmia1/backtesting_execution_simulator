@@ -25,15 +25,7 @@ public:
     }
     
     // Pop next event (by timestamp)
-    std::optional<Event> pop() {
-        if (events_.empty()) {
-            return std::nullopt;
-        }
-        
-        Event event = std::move(const_cast<Event&>(events_.top()));
-        events_.pop();
-        return event;
-    }
+    std::optional<Event> pop();
     
     // Peek at next event without removing
     const Event* peek() const {
@@ -53,19 +45,10 @@ public:
     size_t total_events() const { return event_count_; }
     
     // Clear all events
-    void clear() {
-        while (!events_.empty()) {
-            events_.pop();
-        }
-    }
-    
+    void clear();
+
     // Get next event timestamp (or max if empty)
-    Timestamp next_timestamp() const {
-        if (events_.empty()) {
-            return std::numeric_limits<Timestamp>::max();
-        }
-        return get_event_timestamp(events_.top());
-    }
+    Timestamp next_timestamp() const;
 
 private:
     std::priority_queue<Event, std::vector<Event>, EventComparator> events_;
@@ -157,35 +140,11 @@ public:
     void add_source(EventQueue* source) {
         sources_.push_back(source);
     }
-    
+
     // Get next event across all sources
-    std::optional<Event> pop_next() {
-        EventQueue* best_source = nullptr;
-        Timestamp best_time = std::numeric_limits<Timestamp>::max();
-        
-        for (auto* source : sources_) {
-            if (!source->empty()) {
-                Timestamp ts = source->next_timestamp();
-                if (ts < best_time) {
-                    best_time = ts;
-                    best_source = source;
-                }
-            }
-        }
-        
-        if (best_source) {
-            return best_source->pop();
-        }
-        
-        return std::nullopt;
-    }
-    
-    bool empty() const {
-        for (auto* source : sources_) {
-            if (!source->empty()) return false;
-        }
-        return true;
-    }
+    std::optional<Event> pop_next();
+
+    bool empty() const;
 
 private:
     std::vector<EventQueue*> sources_;

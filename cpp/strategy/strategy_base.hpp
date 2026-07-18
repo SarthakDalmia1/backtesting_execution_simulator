@@ -8,6 +8,7 @@
 #include <vector>
 #include <memory>
 #include <functional>
+#include <unordered_map>
 
 namespace backtest {
 
@@ -88,21 +89,9 @@ public:
         creators_[name] = std::move(creator);
     }
     
-    std::unique_ptr<StrategyBase> create(const std::string& name) {
-        auto it = creators_.find(name);
-        if (it != creators_.end()) {
-            return it->second();
-        }
-        return nullptr;
-    }
-    
-    std::vector<std::string> available_strategies() const {
-        std::vector<std::string> names;
-        for (const auto& [name, creator] : creators_) {
-            names.push_back(name);
-        }
-        return names;
-    }
+    std::unique_ptr<StrategyBase> create(const std::string& name);
+
+    std::vector<std::string> available_strategies() const;
 
 private:
     std::unordered_map<std::string, Creator> creators_;

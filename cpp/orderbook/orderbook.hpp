@@ -26,41 +26,10 @@ public:
     bool empty() const { return order_count_ == 0; }
     
     // Add order to this price level (FIFO)
-    void add_order(Order* order) {
-        order->prev_at_price = tail_;
-        order->next_at_price = nullptr;
-        
-        if (tail_) {
-            tail_->next_at_price = order;
-        } else {
-            head_ = order;
-        }
-        tail_ = order;
-        
-        total_quantity_ += order->remaining_quantity;
-        ++order_count_;
-    }
-    
+    void add_order(Order* order);
+
     // Remove order from this price level
-    void remove_order(Order* order) {
-        if (order->prev_at_price) {
-            order->prev_at_price->next_at_price = order->next_at_price;
-        } else {
-            head_ = order->next_at_price;
-        }
-        
-        if (order->next_at_price) {
-            order->next_at_price->prev_at_price = order->prev_at_price;
-        } else {
-            tail_ = order->prev_at_price;
-        }
-        
-        total_quantity_ -= order->remaining_quantity;
-        --order_count_;
-        
-        order->prev_at_price = nullptr;
-        order->next_at_price = nullptr;
-    }
+    void remove_order(Order* order);
     
     // Get first order (for matching)
     Order* front() const { return head_; }
@@ -204,31 +173,11 @@ public:
     const OrderBookSide<false>& asks() const { return asks_; }
     
     // Add order to book
-    void add_order(Order* order) {
-        orders_[order->id] = order;
-        
-        if (order->side == Side::Buy) {
-            bids_.add_order(order);
-        } else {
-            asks_.add_order(order);
-        }
-    }
-    
+    void add_order(Order* order);
+
     // Remove order from book
-    void remove_order(OrderId id) {
-        auto it = orders_.find(id);
-        if (it == orders_.end()) return;
-        
-        Order* order = it->second;
-        
-        if (order->side == Side::Buy) {
-            bids_.remove_order(order);
-        } else {
-            asks_.remove_order(order);
-        }
-        
-        orders_.erase(it);
-    }
+    void remove_order(OrderId id);
+
     
     void remove_order(Order* order) {
         if (order) remove_order(order->id);
@@ -265,20 +214,7 @@ public:
     }
     
     // Micro price (volume-weighted mid)
-    Price micro_price() const {
-        if (bids_.empty() || asks_.empty()) return Price::zero();
-        
-        Quantity bid_qty = bids_.best_quantity();
-        Quantity ask_qty = asks_.best_quantity();
-        int64_t total = bid_qty.raw + ask_qty.raw;
-        
-        if (total == 0) return mid_price();
-        
-        // Micro price = (bid * ask_qty + ask * bid_qty) / (bid_qty + ask_qty)
-        int64_t weighted = (bids_.best_price().raw * ask_qty.raw + 
-                           asks_.best_price().raw * bid_qty.raw) / total;
-        return Price(weighted);
-    }
+    Price micro_price() const;
     
     // Get order book snapshot
     struct Snapshot {
@@ -288,24 +224,13 @@ public:
         std::vector<BookLevel> asks;
     };
     
-    Snapshot get_snapshot(size_t depth = 10) const {
-        Snapshot snap;
-        snap.symbol = symbol_;
-        snap.timestamp = now_ns();
-        snap.bids = bids_.get_depth(depth);
-        snap.asks = asks_.get_depth(depth);
-        return snap;
-    }
+    Snapshot get_snapshot(size_t depth = 10) const;
     
     // Total order count
     size_t order_count() const { return orders_.size(); }
     
     // Clear all orders
-    void clear() {
-        orders_.clear();
-        bids_ = OrderBookSide<true>();
-        asks_ = OrderBookSide<false>();
-    }
+    void clear();
 
 private:
     Symbol symbol_;

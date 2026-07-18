@@ -48,19 +48,8 @@ struct alignas(CACHE_LINE_SIZE) Order {
         , prev_at_price(nullptr) {}
     
     // Create a new order
-    static Order create(const Symbol& sym, Side s, OrderType t, 
-                        Quantity qty, Price limit_price = Price::zero()) {
-        Order o;
-        o.id = IdGenerator::next_order_id();
-        o.symbol = sym;
-        o.side = s;
-        o.type = t;
-        o.price = limit_price;
-        o.quantity = qty;
-        o.remaining_quantity = qty;
-        o.status = OrderStatus::New;
-        return o;
-    }
+    static Order create(const Symbol& sym, Side s, OrderType t,
+                        Quantity qty, Price limit_price = Price::zero());
     
     // Check if order is active (can be filled or cancelled)
     bool is_active() const {
@@ -87,39 +76,13 @@ struct alignas(CACHE_LINE_SIZE) Order {
     }
     
     // Process a fill
-    void apply_fill(Quantity fill_qty, Price fill_price) {
-        double old_notional = avg_fill_price * filled_quantity.to_double();
-        double fill_notional = fill_price.to_double() * fill_qty.to_double();
-        
-        filled_quantity += fill_qty;
-        remaining_quantity -= fill_qty;
-        
-        if (filled_quantity.raw > 0) {
-            avg_fill_price = (old_notional + fill_notional) / filled_quantity.to_double();
-        }
-        
-        if (remaining_quantity.is_zero()) {
-            status = OrderStatus::Filled;
-        } else {
-            status = OrderStatus::PartiallyFilled;
-        }
-        
-        last_update_time = now_ns();
-    }
-    
+    void apply_fill(Quantity fill_qty, Price fill_price);
+
     // Cancel the order
-    void cancel() {
-        if (is_active()) {
-            status = OrderStatus::Cancelled;
-            last_update_time = now_ns();
-        }
-    }
-    
+    void cancel();
+
     // Reject the order
-    void reject(const std::string& /* reason */ = "") {
-        status = OrderStatus::Rejected;
-        last_update_time = now_ns();
-    }
+    void reject(const std::string& reason = "");
 };
 
 // ============================================================================
@@ -143,40 +106,13 @@ struct OrderRequest {
     
     // Convenience constructors
     static OrderRequest market(const Symbol& sym, Side s, Quantity qty,
-                               const std::string& strategy = "") {
-        OrderRequest req;
-        req.symbol = sym;
-        req.side = s;
-        req.type = OrderType::Market;
-        req.quantity = qty;
-        req.strategy_id = strategy;
-        return req;
-    }
-    
+                               const std::string& strategy = "");
+
     static OrderRequest limit(const Symbol& sym, Side s, Quantity qty, Price price,
-                              const std::string& strategy = "") {
-        OrderRequest req;
-        req.symbol = sym;
-        req.side = s;
-        req.type = OrderType::Limit;
-        req.quantity = qty;
-        req.price = price;
-        req.strategy_id = strategy;
-        return req;
-    }
-    
+                              const std::string& strategy = "");
+
     static OrderRequest ioc(const Symbol& sym, Side s, Quantity qty, Price price,
-                            const std::string& strategy = "") {
-        OrderRequest req;
-        req.symbol = sym;
-        req.side = s;
-        req.type = OrderType::IOC;
-        req.quantity = qty;
-        req.price = price;
-        req.tif = TimeInForce::IOC;
-        req.strategy_id = strategy;
-        return req;
-    }
+                            const std::string& strategy = "");
 };
 
 // ============================================================================

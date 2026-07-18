@@ -40,6 +40,7 @@ add_library(backtesting_engine STATIC
     cpp/position/pnl_tracker.cpp
     cpp/analytics/markout.cpp
     cpp/strategy/strategy_base.cpp
+    cpp/strategy/strategies.cpp
     cpp/data/market_data_feed.cpp
     cpp/data/tick_reader.cpp
 )
